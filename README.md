@@ -1,3 +1,9 @@
+Fixing/improving notcurses library
+===
+<pre>
+For my CryptoChat project (see repository)
+</pre>
+
 # Notcurses: blingful TUIs and character graphics
 
 **What it is**: a library facilitating complex TUIs on modern terminal
