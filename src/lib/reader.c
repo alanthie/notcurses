@@ -69,14 +69,6 @@ ncreader* ncreader_create(ncplane* n, const ncreader_options* opts){
   return nr;
 }
 
-// empty both planes of all input, and home the cursors.
-int ncreader_clear(ncreader* n){
-  ncplane_erase(n->ncp);
-  ncplane_erase(n->textarea);
-  n->xproject = 0;
-  return 0;
-}
-
 ncplane* ncreader_plane(ncreader* n){
   return n->ncp;
 }
@@ -106,6 +98,16 @@ ncreader_redraw(ncreader* n){
     ret = -1;
   }
   return ret;
+}
+
+// empty both planes of all input, and home the cursors.
+int ncreader_clear(ncreader* n){
+  ncplane_erase(n->ncp);
+  ncplane_erase(n->textarea);
+  n->xproject = 0;
+  
+  ncreader_redraw(n); // redraw to see changes
+  return 0;
 }
 
 // try to move left. does not move past the start of the textarea, but will
