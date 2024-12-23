@@ -43,7 +43,7 @@ egcpool_init(egcpool* p){
 static inline int
 egcpool_grow(egcpool* pool, size_t len){
   size_t newsize = pool->poolsize * 2;
-  if(newsize < pool->poolsize){
+  if(newsize < (size_t)pool->poolsize){
     return -1; // pernicious overflow (see also POOL_MAXIMUM_BYTES check below)
   }
   if(newsize < POOL_MINIMUM_ALLOC){
