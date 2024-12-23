@@ -47,24 +47,51 @@ void nctabbed_redraw(nctabbed* nt){
   t = nt->leftmost;
   ncplane_erase(nt->hp);
   ncplane_set_channels(nt->hp, nt->opts.hdrchan);
-  do{
-    if(t == nt->selected){
+  do
+  {
+    // AL
+    if((t == nt->leftmost && drawn_cols < cols) && nt->opts.separator)
+    {
+      if (strlen(nt->opts.separator) >= 2)
+      {
+          ncplane_set_channels(nt->hp, nt->opts.sepchan);
+          char b[2]; b[0] = nt->opts.separator[1]; b[1] = 0;
+          drawn_cols += ncplane_putstr(nt->hp, b);
+          ncplane_set_channels(nt->hp, nt->opts.hdrchan);
+      }
+    }
+
+    if(t == nt->selected)
+    {
       ncplane_set_channels(nt->hp, nt->opts.selchan);
       drawn_cols += ncplane_putstr(nt->hp, t->name);
       ncplane_set_channels(nt->hp, nt->opts.hdrchan);
-    }else{
+    }
+    else
+    {
       drawn_cols += ncplane_putstr(nt->hp, t->name);
     }
     // avoid drawing the separator after the last tab, or when we
     // ran out of space, or when it's not set
-    if((t->next != nt->leftmost || drawn_cols >= cols) && nt->opts.separator){
+    if((t->next != nt->leftmost || drawn_cols >= cols) && nt->opts.separator)
+    {
       ncplane_set_channels(nt->hp, nt->opts.sepchan);
       drawn_cols += ncplane_putstr(nt->hp, nt->opts.separator);
       ncplane_set_channels(nt->hp, nt->opts.hdrchan);
     }
+    // AL
+    else if((t->next == nt->leftmost && drawn_cols < cols) && nt->opts.separator)
+    {
+      ncplane_set_channels(nt->hp, nt->opts.sepchan);
+      char b[2]; b[0] = nt->opts.separator[0]; b[1] = 0;
+      drawn_cols += ncplane_putstr(nt->hp, b);
+      ncplane_set_channels(nt->hp, nt->opts.hdrchan);
+    }
     t = t->next;
-  }while(t != nt->leftmost && drawn_cols < cols);
+  }
+  while(t != nt->leftmost && drawn_cols < cols);
 }
+
 
 void nctabbed_ensure_selected_header_visible(nctabbed* nt){
   nctab* t = nt->leftmost;
