@@ -73,16 +73,17 @@ int main(int argc, char** argv){
   };
   struct ncplane* ncp = ncplane_create(stdp, &popts);
   struct nctabbed_options topts = {
-    .hdrchan = NCCHANNELS_INITIALIZER(255, 0, 0, 60, 60, 60),
-    .selchan = NCCHANNELS_INITIALIZER(0, 255, 0, 0, 0, 0),
+    .hdrchan = NCCHANNELS_INITIALIZER(128, 0, 0, 60, 60, 60),
+    .selchan = NCCHANNELS_INITIALIZER(255, 255, 0, 0, 0, 0),
     .sepchan = NCCHANNELS_INITIALIZER(255, 255, 255, 100, 100, 100),
-    .separator = " || ",
+    .separator = "][",
     .flags = bottom ? NCTABBED_OPTION_BOTTOM : 0
   };
   struct nctabbed* nct = nctabbed_create(ncp, &topts);
   struct nctab* t_; // stupid unused result warnings
   (void) t_;
-  ncplane_set_base(nctabbed_content_plane(nct), " ", 0, NCCHANNELS_INITIALIZER(255, 255, 255, 15, 60, 15));
+  //ncplane_set_base(nctabbed_content_plane(nct), " ", 0, NCCHANNELS_INITIALIZER(255, 255, 255, 15, 60, 15));
+  ncplane_set_base(nctabbed_content_plane(nct), " ", 0, NCCHANNELS_INITIALIZER(255, 255, 255, 128, 128, 128));
   if(nctabbed_add(nct, NULL, NULL, tabcbfn, "Tab #1", NULL) == NULL
      || nctabbed_add(nct, NULL, NULL, tabcbfn, "gamma", NULL) == NULL
      || nctabbed_add(nct, NULL, NULL, tabcbfn, "beta", NULL) == NULL

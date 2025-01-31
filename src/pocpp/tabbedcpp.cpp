@@ -455,7 +455,7 @@ public:
 		nct = nctabbed_create(ncp, &topts);
 
 		//nctab* nctabbed_add(nctabbed* nt, nctab* after, nctab* before, tabcb cb, const char* name, void* opaque){
-		ncplane_set_base(nctabbed_content_plane(nct), " ", 0, NCCHANNELS_INITIALIZER(255, 255, 255, 15, 60, 15));
+		ncplane_set_base(nctabbed_content_plane(nct), " ", 0, NCCHANNELS_INITIALIZER(255, 255, 255, 0, 0, 0));
 		if(     nctabbed_add(nct, NULL, NULL, tabcbfn, "Chat", 	(void*)this) == NULL
 			 || nctabbed_add(nct, NULL, NULL, tabcbfn, "Keys", 	(void*)this) == NULL
 			 || nctabbed_add(nct, NULL, NULL, tabcbfn, "Log", 	(void*)this) == NULL
