@@ -2,7 +2,7 @@
 #include <string.h>
 #include "demo.h"
 
-int MODE=0; // 0, input, text
+int MODE=0; // input, text
 const int CHUNKS_VERT = 3;		// 6
 const int CHUNKS_HORZ = 8;		// 12
 const int chunkcount = CHUNKS_VERT * CHUNKS_HORZ;
@@ -74,6 +74,8 @@ char vtext[MAXGRID][MAXMSG] = {0};
 // TODO dont save as raw - some memory encryption
 int vidx_msg = 0;
 char vmsg[MAXMSG] = {0};
+char vshowmsg[MAXMSG] = {0};
+int show_cnt = 0;
 
 static int fill_chunk(struct ncplane* n, int idx,   int chunkx,  int chunky, bool create_data);
 
@@ -106,6 +108,32 @@ void dumb_grid()
 	fclose(fptr);
 }
 
+void make_showmsg()
+{
+	for(int i=0;i<MAXMSG;i++)
+		vshowmsg[i] = ' ';
+		
+	vshowmsg[0] = vmsg[0];
+	for(int i=1;i<vidx_msg;i++)
+		if (vmsg[i]!=' ')
+			vshowmsg[i] = '*';
+	
+	for(int i=0;i<vidx_msg-1;i++)
+	{
+		if ((vmsg[i]==' ') && (vmsg[i+1] != ' '))
+		{
+			vshowmsg[i+1] = vmsg[i+1];
+		}
+	}
+	
+	int value;
+	for(int i=0;i<show_cnt;i++)
+	{
+		value = rand() % (vidx_msg + 1);
+		vshowmsg[value] = vmsg[value];
+	}
+}
+
 uint32_t process_inputc(struct notcurses* nc)
 {
 	ncinput ni;
@@ -120,86 +148,133 @@ uint32_t process_inputc(struct notcurses* nc)
 		if (MODE==1) draw_text(nc);
 		else draw_grid(nc, false);
 	}
-	else if (id == NCKEY_ENTER)
+	else if (MODE == 0)
 	{
-		int cnt=0;
-		bool done = false;
-		for(int y=0;y<chunk_y-3;y++)
+		if (id == NCKEY_ENTER)
 		{
-			if (done) break;
-			for(int x=0;x<chunk_x-2;x++)
+			int cnt=0;
+			bool done = false;
+			for(int y=0;y<chunk_y-3;y++)
 			{
 				if (done) break;
-				if (curs_x == x && curs_y == y)
+				for(int x=0;x<chunk_x-2;x++)
 				{
-					done = true;
-					break;
+					if (done) break;
+					if (curs_x == x && curs_y == y)
+					{
+						done = true;
+						break;
+					}
+					cnt++;
 				}
-				cnt++;
 			}
-		}
 
-		for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
+			for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
+			{
+				vtext[i][vidx_text[i]] = vdata[i][cnt];
+				vidx_text[i]++;
+			}
+			
+			int gid = get_grid_no();
+			vmsg[vidx_msg] = vdata[gid][cnt];
+			vidx_msg++;
+			
+			dumb_grid();
+		}
+		else if (id == NCKEY_UP)
 		{
-			vtext[i][vidx_text[i]] = vdata[i][cnt];
-			vidx_text[i]++;
+			curs_y--;
+			if (curs_y < 0) curs_y = 0;
+			redraw = true;
+		}
+		else if (id == NCKEY_DOWN)
+		{
+			curs_y++;
+			if (curs_y >= chunk_y-3) curs_y = chunk_y-4;
+			redraw = true;
+		}	
+		else if (id == NCKEY_LEFT)
+		{
+			curs_x--;
+			if (curs_x <= 0) curs_x = 0;
+			redraw = true;
+		}
+		else if (id == NCKEY_RIGHT)
+		{
+			curs_x++;
+			if (curs_x >= chunk_x-2) curs_x = chunk_x-3;
+			redraw = true;	
+		}
+		else if ((id >= 32) && (id <= 126))
+		{
+			vmsg[vidx_msg] = id;
+			vidx_msg++;
+			
+			for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
+			{
+				int value = rand() % (NUMLETTER + 1);
+				if (id == 32) vtext[i][vidx_text[i]] = ' ' ;
+				else vtext[i][vidx_text[i]] = ' ' + value; //random
+				vidx_text[i]++;
+			}
+			
+			dumb_grid();
 		}
 		
-		int gid = get_grid_no();
-		vmsg[vidx_msg] = vdata[gid][cnt];
-		vidx_msg++;
-		
-		dumb_grid();
-	}
-	else if (id == NCKEY_UP)
-	{
-		curs_y--;
-		if (curs_y < 0) curs_y = 0;
-		redraw = true;
-	}
-	else if (id == NCKEY_DOWN)
-	{
-		curs_y++;
-		if (curs_y >= chunk_y-3) curs_y = chunk_y-4;
-		redraw = true;
-	}	
-	else if (id == NCKEY_LEFT)
-	{
-		curs_x--;
-		if (curs_x <= 0) curs_x = 0;
-		redraw = true;
-	}
-	else if (id == NCKEY_RIGHT)
-	{
-		curs_x++;
-		if (curs_x >= chunk_x-2) curs_x = chunk_x-3;
-		redraw = true;	
-	}
-	else if ((id >= 32) && (id <= 126))
-	{
-		vmsg[vidx_msg] = id;
-		vidx_msg++;
-		
-		for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
+		if (redraw)
 		{
-			int value = rand() % (NUMLETTER + 1);
-			vtext[i][vidx_text[i]] = ' ' + value; //random
-			vidx_text[i]++;
+			for(int z = 0 ; z < CHUNKS_VERT * CHUNKS_HORZ ; ++z)
+			{
+				if (CHUNKS[z]!=NULL)
+				if (fill_chunk(CHUNKS[z], z, chunk_x, chunk_y, false))
+				{
+				}
+			}	
+		}
+	}
+	else if (MODE == 1)
+	{
+		if (id == NCKEY_UP)
+		{
+			// show next line
+			redraw = true;
+		}
+		else if (id == NCKEY_DOWN)
+		{
+			// show prev line
+			redraw = true;
+		}	
+		else if (id == NCKEY_LEFT)
+		{
+			// show prev world
+			redraw = true;
+		}
+		else if (id == NCKEY_RIGHT)
+		{
+			// show next world
+			redraw = true;	
+		}
+		else if (id == '+')
+		{
+			// show more letters
+			show_cnt++;
+			if (show_cnt>MAXMSG) show_cnt = MAXMSG;
+			redraw = true;
+		}
+		else if (id == '-')
+		{
+			// show less letters
+			show_cnt--;
+			if (show_cnt<0) show_cnt = 0;
+			redraw = true;	
 		}
 		
-		dumb_grid();
+		if (redraw)
+		{
+			draw_text(nc);
+		}
 	}
 	
-	if (redraw)
-	{
-		for(int z = 0 ; z < CHUNKS_VERT * CHUNKS_HORZ ; ++z)
-		{
-			if (CHUNKS[z]!=NULL)
-			if (fill_chunk(CHUNKS[z], z, chunk_x, chunk_y, false))
-			{
-			}
-		}	
-	}
 	return id;
 }
 
@@ -328,18 +403,36 @@ int draw_text(struct notcurses* nc)
 		return -1;
 	}
  
+	make_showmsg();
+	
 	for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
     {
-		ret |= (ncplane_printf_yx(nc_text, i, 0, "%2d: ", i+1) < 0);
-		for(int j=0;j<vidx_text[i];j++)
+		if (i==0)
 		{
-			ret |= (ncplane_printf_yx(nc_text, i, j+4, "%c", vtext[i][j]) < 0);
+			ret |= (ncplane_printf_yx(nc_text, i, 0, "**: ") < 0);
+			for(int j=0;j<vidx_msg;j++)
+			{
+				ret |= (ncplane_printf_yx(nc_text, i, j+4, "%c", vshowmsg[j]) < 0);
+			}
+			for(int j=vidx_msg;j<maxx-4;j++)
+			{
+				ret |= (ncplane_printf_yx(nc_text, i, j+4, " ") < 0);
+			}
 		}
-		for(int j=vidx_text[i];j<maxx-4;j++)
+		else
 		{
-			ret |= (ncplane_printf_yx(nc_text, i, j+4, " ") < 0);
+			ret |= (ncplane_printf_yx(nc_text, i, 0, "%2d: ", i+1) < 0);
+			for(int j=0;j<vidx_text[i];j++)
+			{
+				ret |= (ncplane_printf_yx(nc_text, i, j+4, "%c", vtext[i][j]) < 0);
+			}
+			for(int j=vidx_text[i];j<maxx-4;j++)
+			{
+				ret |= (ncplane_printf_yx(nc_text, i, j+4, " ") < 0);
+			}
 		}
 	}
+	
 	for(int i=CHUNKS_VERT * CHUNKS_HORZ;i<BoxH-2;i++)
     {
 		for(int j=0;j<BoxW-3;j++)
