@@ -20,8 +20,8 @@ static nciqueue** enqueue = &queue;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t cond; // use pthread_condmonotonic_init()
 
-static int
-handle_mouse(const ncinput* ni){
+static int handle_mouse(const ncinput* ni)
+{
   if(ni->id != NCKEY_BUTTON1){
     return 0;
   }
