@@ -16,8 +16,9 @@ int chunk_x=2;
 int chunk_y=2;
 
 // Number of letter per grid
-#define NUMLETTER 70
-#define NUMLETTER2 140
+// 32-96
+#define NUMLETTER 65
+#define NUMLETTER2 130
 #define MAXMSG 1000
 #define MAXGRID 40
 
@@ -63,15 +64,40 @@ char vdata[MAXGRID][NUMLETTER];
 int  vidx_text[MAXGRID] = {0};
 char vtext[MAXGRID][MAXMSG] = {0};
 
+// TODO dont save as raw - some memory encryption
 int vidx_msg = 0;
 char vmsg[MAXMSG] = {0};
 
 static int fill_chunk(struct ncplane* n, int idx,   int chunkx,  int chunky, bool create_data);
 
-int 	grid_no=0; // 0 to CHUNKS_VERT * CHUNKS_HORZ-1
+// Grid with the good input
+int grid_no=0; // 0 to CHUNKS_VERT * CHUNKS_HORZ-1
+
+// INTERFACE
 int 	get_grid_no() {return grid_no;}
 void 	set_grid_no(int i) {grid_no = i;}
 int 	get_number_of_grid() {return CHUNKS_VERT * CHUNKS_HORZ;}
+
+void dumb_grid()
+{
+	// TEST show all grid messages 
+	FILE* fptr;
+	fptr = fopen("tmpinput.txt", "w");
+	for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
+	{
+		fprintf(fptr, "%2d:", i+1);
+		for(int j=0;j<vidx_text[i];j++)
+			fprintf(fptr, "%c", vtext[i][j]);
+		fprintf(fptr, "\n");
+	}
+	
+	fprintf(fptr, "msg:");
+	for(int j=0;j<vidx_msg;j++)
+		fprintf(fptr, "%c", vmsg[j]);
+	fprintf(fptr, "\n");
+	
+	fclose(fptr);
+}
 
 uint32_t process_inputc(struct notcurses* nc)
 {
@@ -110,47 +136,38 @@ uint32_t process_inputc(struct notcurses* nc)
 		vmsg[vidx_msg] = vdata[gid][cnt];
 		vidx_msg++;
 		
-		// TEST show all grid messages 
-		FILE* fptr;
-		fptr = fopen("tmpinput.txt", "w");
-		for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
-		{
-			fprintf(fptr, "%2d:", i+1);
-			for(int j=0;j<vidx_text[i];j++)
-				fprintf(fptr, "%c", vtext[i][j]);
-			fprintf(fptr, "\n");
-		}
-		
-		fprintf(fptr, "msg:");
-		for(int j=0;j<vidx_msg;j++)
-			fprintf(fptr, "%c", vmsg[j]);
-		fprintf(fptr, "\n");
-		
-		fclose(fptr);
+		dumb_grid();
 	}
-	else if (id == 'w')
+	else if (id == NCKEY_UP)
 	{
 		curs_y--;
 		if (curs_y < 0) curs_y = 0;
 		redraw = true;
 	}
-	else if (id == 's')
+	else if (id == NCKEY_DOWN)
 	{
 		curs_y++;
 		if (curs_y >= chunk_y-3) curs_y = chunk_y-4;
 		redraw = true;
 	}	
-	else if (id == 'a')
+	else if (id == NCKEY_LEFT)
 	{
 		curs_x--;
 		if (curs_x <= 0) curs_x = 0;
 		redraw = true;
 	}
-	else if (id == 'd')
+	else if (id == NCKEY_RIGHT)
 	{
 		curs_x++;
 		if (curs_x >= chunk_x-2) curs_x = chunk_x-3;
 		redraw = true;	
+	}
+	else if ((id >= 32) && (id <= 126))
+	{
+		vmsg[vidx_msg] = id;
+		vidx_msg++;
+		
+		dumb_grid();
 	}
 	
 	if (redraw)
@@ -292,7 +309,7 @@ static int fill_chunk(struct ncplane* n, int idx,   int chunkx,  int chunky, boo
   {
 	  for(int i=0;i<NUMLETTER;i++)
 	  {
-		  vdata[idx][i]='0'+i;
+		  vdata[idx][i]=' '+i;
 	  }
   }
   
