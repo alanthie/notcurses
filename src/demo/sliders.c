@@ -145,7 +145,6 @@ uint32_t process_inputc(struct notcurses* nc)
 			vidx_text[i]++;
 		}
 		
-		// TODO - receive the grid number where data is for next input
 		int gid = get_grid_no();
 		vmsg[vidx_msg] = vdata[gid][cnt];
 		vidx_msg++;
@@ -181,27 +180,10 @@ uint32_t process_inputc(struct notcurses* nc)
 		vmsg[vidx_msg] = id;
 		vidx_msg++;
 		
-		int cnt=0;
-		bool done = false;
-		for(int y=0;y<chunk_y-3;y++)
-		{
-			if (done) break;
-			for(int x=0;x<chunk_x-2;x++)
-			{
-				if (done) break;
-				if (curs_x == x && curs_y == y)
-				{
-					done = true;
-					break;
-				}
-				cnt++;
-			}
-		}
-		
 		for(int i=0;i<CHUNKS_VERT * CHUNKS_HORZ;i++)
 		{
 			int value = rand() % (NUMLETTER + 1);
-			vtext[i][vidx_text[i]] = ' ' + value; //vdata[i][cnt]; // or random...
+			vtext[i][vidx_text[i]] = ' ' + value; //random
 			vidx_text[i]++;
 		}
 		
@@ -335,9 +317,9 @@ int draw_text(struct notcurses* nc)
 	struct ncplane_options nopts = 
 	{
 		.y = 2,
-		.x = 1,
+		.x = 3,
 		.rows = BoxH-2,
-		.cols = BoxW-1
+		.cols = BoxW-3
 	};
 	
 	nc_text = ncplane_create(n, &nopts);
@@ -360,7 +342,7 @@ int draw_text(struct notcurses* nc)
 	}
 	for(int i=CHUNKS_VERT * CHUNKS_HORZ;i<BoxH-2;i++)
     {
-		for(int j=0;j<BoxW-1;j++)
+		for(int j=0;j<BoxW-3;j++)
 		{
 			ret |= (ncplane_printf_yx(nc_text, i, j, " ") < 0);
 		}
@@ -478,8 +460,7 @@ done:;
 
 
 //--------------------------------------------------------------------------------
-// Entry:
-// make a bunch of boxes with gradients and use them to play a sliding puzzle.
+// Entry
 //--------------------------------------------------------------------------------
 int sliders_demo(struct notcurses* nc, uint64_t startns)
 {
