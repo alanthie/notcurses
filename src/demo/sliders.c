@@ -29,6 +29,154 @@ int chunk_y=2;
 int draw_text(struct notcurses* nc);
 int draw_grid(struct notcurses* nc, bool create_grid);
 
+// dict /usr/share/dict/words
+#define MAXDICT 105000
+#define MAXWORD 20000
+int wcnt[10] = {0};
+char word1[MAXWORD][2] = {0};
+char word2[MAXWORD][3] = {0};
+char word3[MAXWORD][4] = {0};
+char word4[MAXWORD][5] = {0};
+char word5[MAXWORD][6] = {0};
+char word6[MAXWORD][7] = {0};
+char word7[MAXWORD][8] = {0};
+char word8[MAXWORD][9] = {0};
+char word9[MAXWORD][10] = {0};
+char word10[MAXWORD][11] = {0};
+
+int ndict=0;
+int read_dict()
+{
+	int len;
+    FILE *file_ptr;
+    char str[50];
+
+    file_ptr = fopen("/usr/share/dict/words", "r");
+    if (NULL == file_ptr) 
+    {
+        printf("File can't be opened \n");
+        return -1;
+    }
+
+    while (fgets(str, 50, file_ptr) != NULL) 
+    {
+        //strcpy(word[ndict], str);
+        len = strlen(str);
+        for(int i=0;i<len;i++)
+        {
+			if (str[i]=='\r') str[i] = 0;
+			if (str[i]=='\n') str[i] = 0;
+		}
+		len = strlen(str);
+        
+        if ((len>0) && (len<=10)  && ((str[0] < 'A') || (str[0] > 'Z')) )
+        {
+			if (wcnt[len-1] < MAXWORD)
+			{	
+				if (len==1) 	 {strcpy(word1[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==2) {strcpy(word2[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==3) {strcpy(word3[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==4) {strcpy(word4[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==5) {strcpy(word5[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==6) {strcpy(word6[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==7) {strcpy(word7[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==8) {strcpy(word8[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==9) {strcpy(word9[wcnt[len-1]], str); wcnt[len-1]++;}
+				else if (len==10) {strcpy(word10[wcnt[len-1]], str); wcnt[len-1]++;}
+        
+				ndict++;
+				//if (ndict>=10000) break;
+				if (ndict>=105000) break;
+			}
+		}
+    }
+
+    fclose(file_ptr);
+    return 0;
+}
+
+char* get_rnd_word(int n)
+{
+	if ((n>=1) && (n<=10) && (wcnt[n-1] > 0))
+	{
+		int value = rand() % (wcnt[n-1] + 0);
+		if (n==1) 	   return &word1[value][0];
+		else if (n==2) return &word2[value][0];
+		else if (n==3) return &word3[value][0];
+		else if (n==4) return &word4[value][0];
+		else if (n==5) return &word5[value][0];
+		else if (n==6) return &word6[value][0];
+		else if (n==7) return &word7[value][0];
+		else if (n==8) return &word8[value][0];
+		else if (n==9) return &word9[value][0];
+		else if (n==10) return &word10[value][0];
+	}
+	return 0;
+}
+
+bool replace_with_rnd_word(char* p)
+{
+	int n = 0;
+	for(int i=0;i<50;i++)
+	{
+		if (p[i] != 0)
+		{
+			if (p[i] != ' ')
+				n++;
+			else
+				break;
+		}
+		else
+			break;
+	}
+	
+	if ((n>=1) && (n<=10))
+	{
+		char* w = get_rnd_word(n);
+		if (w != 0)
+		{
+			
+			// TEST
+			FILE* fptr;
+			fptr = fopen("tmpw.txt", "a");
+			fprintf(fptr, "%d %s\n", n, w);
+			fclose(fptr);
+	
+			for(int i=0;i<n;i++)
+			{
+				p[i] = w[i];
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+
+void write_dict()
+{
+	FILE* fptr;
+	fptr = fopen("tmpdict.txt", "w");
+	
+	fprintf(fptr, "1\n");
+	for(int i=0;i<wcnt[0];i++) fprintf(fptr, "%s\n", word1[i]);
+	
+	fprintf(fptr, "2\n");
+	for(int i=0;i<wcnt[1];i++) fprintf(fptr, "%s\n", word2[i]);
+	
+	fprintf(fptr, "3\n");
+	for(int i=0;i<wcnt[2];i++) fprintf(fptr, "%s\n", word3[i]);
+	
+	for(int i=0;i<wcnt[3];i++) fprintf(fptr, "%s\n", word4[i]);
+	for(int i=0;i<wcnt[4];i++) fprintf(fptr, "%s\n", word5[i]);
+	for(int i=0;i<wcnt[5];i++) fprintf(fptr, "%s\n", word6[i]);
+	for(int i=0;i<wcnt[6];i++) fprintf(fptr, "%s\n", word7[i]);
+	for(int i=0;i<wcnt[7];i++) fprintf(fptr, "%s\n", word8[i]);
+	for(int i=0;i<wcnt[8];i++) fprintf(fptr, "%s\n", word9[i]);
+	for(int i=0;i<wcnt[9];i++) fprintf(fptr, "%s\n", word10[i]);
+	fclose(fptr);
+}
+
 void shuffle(char *array, size_t n)
 {
     if (n > 1) 
@@ -70,6 +218,7 @@ struct ncplane** CHUNKS = NULL;
 char vdata[MAXGRID][NUMLETTER];
 int  vidx_text[MAXGRID] = {0};
 char vtext[MAXGRID][MAXMSG] = {0};
+char vshowtext[MAXGRID][MAXMSG] = {0};
 
 // TODO dont save as raw - some memory encryption
 int vidx_msg = 0;
@@ -127,10 +276,71 @@ void make_showmsg()
 	}
 	
 	int value;
-	for(int i=0;i<show_cnt;i++)
+	int nfill=0;
+	for(int j=0;j<vidx_msg;j++)
 	{
-		value = rand() % (vidx_msg + 1);
+		if (vshowmsg[j] == vmsg[j]) 
+			nfill++;
+	}
+		
+	if (show_cnt > vidx_msg) show_cnt = vidx_msg;
+	
+	while (nfill < show_cnt)
+	{
+		value = rand() % vidx_msg;
 		vshowmsg[value] = vmsg[value];
+		
+		nfill = 0;
+		for(int j=0;j<vidx_msg;j++)
+		{
+			if (vshowmsg[j] == vmsg[j]) 
+				nfill++;
+		}
+	}
+	
+	
+	
+	for(int idx=0;idx<CHUNKS_VERT * CHUNKS_HORZ;idx++)
+	{
+		for(int i=0;i<MAXMSG;i++)
+			vshowtext[idx][i] = ' ';
+		
+		if (vtext[idx][0]!=' ') 
+		{
+			replace_with_rnd_word(&vtext[idx][0]);
+		}
+		
+		for(int i=0;i<vidx_text[idx]-1;i++)
+		{
+			if ((vtext[idx][i]==' ') && (vtext[idx][i+1] != ' '))
+			{
+				// start of a word at i+1
+				replace_with_rnd_word(&vtext[idx][i+1]);
+			}
+		}
+		
+		vshowtext[idx][0] = vtext[idx][0];
+		for(int i=1;i<vidx_text[idx];i++)
+			if (vtext[idx][i]!=' ')
+				vshowtext[idx][i] = '*';
+		
+		for(int i=0;i<vidx_text[idx]-1;i++)
+		{
+			if ((vtext[idx][i]==' ') && (vtext[idx][i+1] != ' '))
+			{
+				// start of a word
+				vshowtext[idx][i+1] = vtext[idx][i+1];
+			}
+		}
+		
+		for(int i=0;i<show_cnt;i++)
+		{
+			if (vidx_text[idx] > 0)
+			{
+				value = rand() % (vidx_text[idx] + 0);
+				vshowtext[idx][value] = vtext[idx][value];
+			}
+		}
 	}
 }
 
@@ -424,7 +634,7 @@ int draw_text(struct notcurses* nc)
 			ret |= (ncplane_printf_yx(nc_text, i, 0, "%2d: ", i+1) < 0);
 			for(int j=0;j<vidx_text[i];j++)
 			{
-				ret |= (ncplane_printf_yx(nc_text, i, j+4, "%c", vtext[i][j]) < 0);
+				ret |= (ncplane_printf_yx(nc_text, i, j+4, "%c", vshowtext[i][j]) < 0);
 			}
 			for(int j=vidx_text[i];j<maxx-4;j++)
 			{
@@ -559,6 +769,10 @@ int sliders_demo(struct notcurses* nc, uint64_t startns)
 {
 	int ret = -1;
 	ret = draw_grid(nc, true);
+
+read_dict();
+write_dict();
+//return 0;
 
 	// LOOP input/render
 	uint32_t id=0;
