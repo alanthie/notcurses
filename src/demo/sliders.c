@@ -44,6 +44,48 @@ char word8[MAXWORD][9] = {0};
 char word9[MAXWORD][10] = {0};
 char word10[MAXWORD][11] = {0};
 
+// /home/allaptop/dev/notcurses/build/world-80-days_djvu.txt
+int nbookline=0;
+#define MAXLINE 200000
+char book[MAXLINE][200] = {0};
+int read_book()
+{
+	int len;
+    FILE *file_ptr;
+    char str[200];
+
+    file_ptr = fopen("/home/allaptop/dev/notcurses/build/world-80-days_djvu.txt", "r");
+    if (NULL == file_ptr) 
+    {
+        printf("File can't be opened \n");
+        return -1;
+    }
+
+    while (fgets(str, 200, file_ptr) != NULL) 
+    {
+		len = strlen(str);
+        for(int i=0;i<len;i++)
+        {
+			if (str[i]=='\r') str[i] = 0;
+			if (str[i]=='\n') str[i] = 0;
+		} 
+		
+		len = strlen(str);
+		if (len>0)
+        {
+			if (nbookline < MAXLINE)
+			{	
+				strcpy(&book[nbookline][0], str); 
+				nbookline++;
+			}
+		}
+    }
+
+    fclose(file_ptr);
+    return 0;
+    
+}
+
 int ndict=0;
 int read_dict()
 {
@@ -93,6 +135,28 @@ int read_dict()
 
     fclose(file_ptr);
     return 0;
+}
+
+char* get_rnd_bookline(int n)
+{
+	if (nbookline > 0)
+	{
+		while (true)
+		{
+			int value = rand() % (nbookline + 0);
+			if (strlen(&book[value][0]) >= n)
+			{
+				// TEST
+			FILE* fptr;
+			fptr = fopen("tmpw.txt", "a");
+			fprintf(fptr, "%d %s\n", n, &book[value][0]);
+			fclose(fptr);
+			
+				return &book[value][0];
+			}
+		}
+	}
+	return 0;
 }
 
 char* get_rnd_word(int n)
@@ -302,22 +366,28 @@ void make_showmsg()
 	
 	for(int idx=0;idx<CHUNKS_VERT * CHUNKS_HORZ;idx++)
 	{
+		char* line = get_rnd_bookline(vidx_text[idx]);
+		if (line != 0)
+		{
+			strncpy(vtext[idx], line, vidx_text[idx]);
+		}
+	
 		for(int i=0;i<MAXMSG;i++)
 			vshowtext[idx][i] = ' ';
 		
-		if (vtext[idx][0]!=' ') 
-		{
-			replace_with_rnd_word(&vtext[idx][0]);
-		}
+		//if (vtext[idx][0]!=' ') 
+		//{
+			//replace_with_rnd_word(&vtext[idx][0]);
+		//}
 		
-		for(int i=0;i<vidx_text[idx]-1;i++)
-		{
-			if ((vtext[idx][i]==' ') && (vtext[idx][i+1] != ' '))
-			{
-				// start of a word at i+1
-				replace_with_rnd_word(&vtext[idx][i+1]);
-			}
-		}
+		//for(int i=0;i<vidx_text[idx]-1;i++)
+		//{
+			//if ((vtext[idx][i]==' ') && (vtext[idx][i+1] != ' '))
+			//{
+				//// start of a word at i+1
+				//replace_with_rnd_word(&vtext[idx][i+1]);
+			//}
+		//}
 		
 		vshowtext[idx][0] = vtext[idx][0];
 		for(int i=1;i<vidx_text[idx];i++)
@@ -772,6 +842,8 @@ int sliders_demo(struct notcurses* nc, uint64_t startns)
 
 read_dict();
 write_dict();
+
+read_book();
 //return 0;
 
 	// LOOP input/render
