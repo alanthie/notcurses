@@ -2,6 +2,8 @@ Fixing/improving notcurses library
 ===
 <pre>
 For my CryptoChat project (see repository)
+
+See build_all repository for latest way to build on most distros
 </pre>
 
 # Notcurses: blingful TUIs and character graphics
